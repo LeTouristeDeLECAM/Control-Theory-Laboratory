@@ -1,0 +1,53 @@
+Help on function Leadlag_RT in module package_DBR_Advanced :
+Lead l ag_RT(MV, Kp, Tlead , Tlag, Ts, PV, PVInit=0, met hod=' EBD'}
+The f unct ion "Leadl ag_RT" needs to be i ncluded in a "for or i.hile loop" .
+:MV: i nput vect or
+:Kp: process gain
+:Tlead: l ead time constant [ s ]
+:Tlag : l ag t ime constant [ s ]
+:Ts : s ampling period [s]
+:PV: out put vector
+:PVIni t : (optional : default value is 0}
+:method: di scret isation met hod (optiona l : def a ult value is 'EBD '}
+EBD: Euler Backward diffe rence
+EFD: Euler Forward difference
+TRAP : Trapezoï dal method
+The function appends a va l ue t o the output vector "PV" .
+The appended value is obtained from a recurrent equation that depends on the discretisat ion method.
+
+
+
+
+
+
+
+Help on function PID_RT in module package_DBR_Advanced:
+PID_RT{SP, PV, Man, MVMan, MVFF, Kc, Ti, Td , alpha, Ts, MVMi n, MVMax, MV, MVP, MVI, MVD, E, ManfF=False, PVInit =0, method=' EBD-EBD' )
+The function "P ID_RT" needs to be i nc luded in a "fo r or •1hile loop".
+:SP: SP (or SetPoint ) vector
+:PV: PV (or Process Val ue) vect or
+:Man : Man (or Manual controller mode) vector (True or False)
+:MVMan: MVMan (or Manual value for MV) vector
+:MVFF : MVFF ( or Feedf ort;ard) vector
+:Kc: control ler gain
+:Ti : i ntegral time const ant [s]
+:Td : derivative time constant [ s]
+:alpha: Tfd = alpha*Td where Tfd is t he derivative f ilter time const ant [s)
+:Ts: sampling period [s)
+:MVMin: minimum value for MV (used for saturation and anti t,ind-up)
+:MVMax : maximum value for MV (used for saturation and anti wind-up)
+:MV: MV (or Manipulated Value) vector
+:MVP: MVP (or Pr opotional part of MV) vector
+:MVI: MVI (or Integral part of MV} vect or
+:MVD: MVD (or Derivative part of MV) vector
+:E: E (or control Error) vector
+:ManFF: Activated FF i n manual mode (opt ional: default boolean value i s Fal se)
+:PVInit: Initial value for PV (optional: default value is 0): used if PID_RT is ran f irst in t he squence and no value of PV is available yet .
+:method: discretisation method (optiona l : default value is 'EBD' )
+EBD-EBD: EBD for i ntegral action and EBD for derivative action
+EBD-TRAP: EBD for i ntegral action and TRAP for derivative action
+TRAP-EBD: TRAP for i ntegral action and EBD for derivative action
+TRAP-TRAP : TRAP for integral action and TRAP for deri vative act ion
+The function "PID_RT" appends new values to the vectors "MV", "MVP", "MVI ", and "MVD" .
+The appended values are based on the PID algorithm, the controller mode, and feedforward.
+Note that saturation of "MV" within the limits [MVMin MVMax) is impl emented with anti elind -up.
