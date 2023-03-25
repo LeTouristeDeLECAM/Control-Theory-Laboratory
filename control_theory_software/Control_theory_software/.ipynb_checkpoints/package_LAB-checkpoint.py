@@ -14,7 +14,8 @@ def LL_RT(MV,Kp,Tlead,Tlag,Ts,PV,PVInit=0,method='EBD'):
     
     :MV: input vector
     :Kp: process gain
-    :T: lag time constant [s]
+    :Tlead: lead time constant [s]
+    :Tlag: lag time constant [s]
     :Ts: sampling period [s]
     :PV: output vector
     :PVInit: (optional: default value is 0)
@@ -48,31 +49,33 @@ def LL_RT(MV,Kp,Tlead,Tlag,Ts,PV,PVInit=0,method='EBD'):
 def PID_RT(SP,PV,MAN,MV_MAN,MV_FF,K_C,T_I,T_D,alpha,Ts,MV_MAX,MV_MIN,MV,MV_P,MV_I,MV_D,E,MAN_FF=False,PVInit=0,method='EBD_EBD'): #,activateFF=activateFF
     
     """
-This function should be imported in a loop 
-SP: set point 
-PV: process value
-PVInit : PV initial value is applied when PID_RT start to run
-MV : manipulated value 
-MV_P : P-part manipulted value 
-MV_I : I-part manipulated value
-MV_D : D-part of the manipulated value
-E : control error
-
-K_C : controller gain
-T_I : integration time constant [s]
-T_D : derivative time constant [s]
-T_FD :  derivative filter time constant [s] = alpha*T_D 
-Ts : sampling time 
-
-TRACK_ON : output tracking
-TRACK_VAL : output te-racking value
-
-MAN : manual mode
-MAN_FF : feedforward active in manual mode
-MV_FF: MV feedforward qui correspond à la partie qu'on anticipe de la disturbance D
-MV_MIN : minimum value for MV (set the saturation value and anti wind-up)
-MV_MAX :maximum value for MV ( set the saturation value)
-MV_MAN : MV value in manual mode 
+    The function "PID_RT" needs to be included in a "for or while loop".
+    
+    :SP: SP (or SetPoint ) vector
+    :PV: PV (or Process Value) vector
+    :MAN : MAN (or Manual controller mode) vector (True or False)
+    :MV_MAN: MV_MAN (or Manual value for MV) vector
+    :MV_FF : MV_FF ( or Feedf ort;ard) vector
+    :K_C: control ler gain
+    :T_I : i ntegral time const ant [s]
+    :T_D : derivative time constant [ s]
+    :alpha: Tfd = alpha*Td where Tfd is t he derivative f ilter time const ant [s)
+    :Ts: sampling period [s)
+    :MV_MAX : maximum value for MV (used for saturation and anti wind-up)
+    :MV_MIN: minimum value for MV (used for saturation and anti t,ind-up)
+    :MV: MV (or Manipulated Value) vector
+    :MV_P: MV_P (or Pr opotional part of MV) vector
+    :MV_I: MV_I (or Integral part of MV} vect or
+    :MV_D: MV_D (or Derivative part of MV) vector
+    :E: E (or control Error) vector
+    :Man_FF: Activated FF i n manual mode (opt ional: default boolean value i s Fal se)
+    :PVInit: Initial value for PV (optional: default value is 0): used if PID_RT is ran f irst in t he squence and no value of PV is available yet .
+    :method: discretisation method (optiona l : default value is 'EBD' )
+    EBD-EBD: EBD for i ntegral action and EBD for derivative action
+    
+    The function "PID_RT" appends new values to the vectors "MV", "MV_P", "MV_I ", and "MV_D" .
+    The appended values are based on the PID algorithm, the controller mode, and feedforward.
+    Note that saturation of "MV" within the limits [MV_MIN MV_MAX) is impl emented with anti wlind-up.
 
 
     """    
@@ -151,7 +154,16 @@ MV_MAN : MV value in manual mode
 
 def IMC_Tuning(Kp,T1,T2,theta,gamma,method='SOPDT'):
     """
-    using the method of the course 
+    The function "IMC_Tuning" Calculate and return Kc, TauI, TauD, alpha optimized with the IMC_tuning grid 
+    Kp : stactic gain
+    T1 : First time constant
+    T2 : Seconde time constant
+    theta : Delay 
+    gamma : 
+    method: Select which methode the IMC_tuning should use
+        SOPDT:  Second order plus delay
+        FOPDT: First order plus delay
+    
     """
     
     if method=='SOPDT':
@@ -181,6 +193,26 @@ def IMC_Tuning(Kp,T1,T2,theta,gamma,method='SOPDT'):
 #---------------------------------------------------------------------
 
 def FF_RT(DV,Kd,Kp,Tlead1,Tlag1,Tlead2,Tlag2,thetaD,thetaP,Ts,FF_OUT,PV_LL1,PV_LL2,Dv0=0):
+    
+        """
+    The function "FF_RT" 
+    DV:
+    Kd:
+    Kp:
+    Tlead1:
+    Tlag1:
+    Tlead2:
+    Tlag2:
+    thetaD:
+    thetaP:
+    Ts: sampling period [s]
+    FF_OUT:
+    PV_LL1:
+    PV_LL2:
+    Dv0=0:
+    
+    """
+        
     diff = DV[-1] - Dv0
     KFF = Kd/Kp
     theta_FF = max(0,thetaD-thetaP)
