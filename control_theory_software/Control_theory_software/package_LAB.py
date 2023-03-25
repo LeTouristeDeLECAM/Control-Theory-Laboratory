@@ -69,9 +69,9 @@ def PID_RT(SP,PV,MAN,MV_MAN,MV_FF,K_C,T_I,T_D,alpha,Ts,MV_MAX,MV_MIN,MV,MV_P,MV_
     :MV_D: MV_D (or Derivative part of MV) vector
     :E: E (or control Error) vector
     :Man_FF: Activated FF i n manual mode (opt ional: default boolean value i s Fal se)
-    :PVInit: Initial value for PV (optional: default value is 0): used if PID_RT is ran f irst in t he squence and no value of PV is available yet .
+    :PVInit: Initial value for PV (optional: default value is 0): used if PID_RT is ran f irst in t he squence and no value of PV is available yet.
     :method: discretisation method (optiona l : default value is 'EBD' )
-    EBD-EBD: EBD for i ntegral action and EBD for derivative action
+        EBD-EBD: EBD for i ntegral action and EBD for derivative action
     
     The function "PID_RT" appends new values to the vectors "MV", "MV_P", "MV_I ", and "MV_D" .
     The appended values are based on the PID algorithm, the controller mode, and feedforward.
@@ -94,19 +94,19 @@ def PID_RT(SP,PV,MAN,MV_MAN,MV_FF,K_C,T_I,T_D,alpha,Ts,MV_MAX,MV_MIN,MV,MV_P,MV_
         
 
         
-        #P-part
+        #Proportional-part
         MV_P.append(K_C*E[-1])
         
         
-        #I-part
+        #Itegral-part
         if len(MV_I)==0 : 
             MV_I.append(( K_C * Ts/ T_I)* E[-1])
         else : 
             MV_I.append(MV_I[-1]+(K_C * Ts/ T_I)*E[-1])
    
         
-        #D_part
-        T_FD = alpha*T_D
+        #Derivative_part (Have to be filtred slide 194)
+        T_FD = alpha*T_D 
     
         if len(MV_D)==0 and len(E)>1:
             MV_D.append((K_C * T_D/T_FD + Ts)*(E[-1] - E[-2]))
@@ -115,34 +115,36 @@ def PID_RT(SP,PV,MAN,MV_MAN,MV_FF,K_C,T_I,T_D,alpha,Ts,MV_MAX,MV_MIN,MV,MV_P,MV_
         else:
             MV_D.append((T_FD / (T_FD + Ts))*MV_D[-1]+(K_C * T_D/(T_FD + Ts))*(E[-1] - E[-2]))
             
-        #windup 
-        if MV_P[-1]+MV_I[]>MV_MAX:
-            MV_I.append(MV_MAX-MV_P[-1])
-        elif MV_P[-1]+MV_I[]<MV_MIN :
-            MV_I.append(MV_MIN-MV_P[-1])
-         
-            
+
+        
         #feedForward
                         
-        
-        #if len(MV_FF)== 0 or not activateFF :
-        #    MV_feed_forward = 0 
-        #else:
-        #    MV_feed_forward = MV_FF[-1]
-        
+        if len(MV_FF)== 0 or not activateFF :
+            MV_feed_forward = 0 
+        else:
+            MV_feed_forward = MV_FF[-1]
+                  
+            
+            
+        #windup 
+        if MV_P[-1]+MV_I[-1]+MV_D[-1]>MV_MAX:
+            MV_I[-1]=(MV_MAX-MV_P[-1]-MV_D[-1])
+            
+        elif MV_P[-1]+MV_I[-1]+MV_D[-1]<MV_MIN :
+            MV_I[-1]=(MV_MIN-MV_P[-1]-MV_D[-1])
+
                         
         # MV_part                
-        MV_SUM = MV_P[-1] + MV_I[-1] + MV_D[-1] #+ MV_feed_forward
-        if MV_SUM > MV_MAX :
-            MV_SUM =MV_MAX
-        elif MV_SUM < MV_MIN : 
-            MV_SUM = MV_MIN
+        MV_SUM = MV_P[-1] + MV_I[-1] + MV_D[-1] + MV_feed_forward
+        
+
         MV.append(MV_SUM)
         
     else:
         MV_I.append(0)
         MV_P.append(0)
         MV_D.append(0)
+        
         if len(MV_MAN)==0:
             MV.append(0)
         else :
@@ -159,7 +161,7 @@ def IMC_Tuning(Kp,T1,T2,theta,gamma,method='SOPDT'):
     T1 : First time constant
     T2 : Seconde time constant
     theta : Delay 
-    gamma : 
+    gamma : agressivity [0,2...0,9] more close to 0,2 more its agressive
     method: Select which methode the IMC_tuning should use
         SOPDT:  Second order plus delay
         FOPDT: First order plus delay
@@ -168,6 +170,7 @@ def IMC_Tuning(Kp,T1,T2,theta,gamma,method='SOPDT'):
     
     if method=='SOPDT':
         
+        # silde 186 Ligne B 
         TauOLP = max(T1,T2)
         TauC = gamma*TauOLP
         Kc = (T1+T2)/(TauC)
@@ -179,6 +182,7 @@ def IMC_Tuning(Kp,T1,T2,theta,gamma,method='SOPDT'):
     
     
     elif method=='FOPDT':
+        #Slide 186 Ligne H
         TauOLP = T1
         TauC = gamma*TauOLP
         
@@ -186,15 +190,17 @@ def IMC_Tuning(Kp,T1,T2,theta,gamma,method='SOPDT'):
         Kc = Kc/Kp
         TauI = T1+(theta/2)
         TauD = T1*theta/(2*T1+theta)
-        alpha = 0.25
+        alpha = 0.25 # should move this somewhere else 
         return Kc, TauI, TauD, alpha
         
 
 #---------------------------------------------------------------------
 
+
+
 def FF_RT(DV,Kd,Kp,Tlead1,Tlag1,Tlead2,Tlag2,thetaD,thetaP,Ts,FF_OUT,PV_LL1,PV_LL2,Dv0=0):
-    
-        """
+          
+    """
     The function "FF_RT" 
     DV:
     Kd:
@@ -212,12 +218,15 @@ def FF_RT(DV,Kd,Kp,Tlead1,Tlag1,Tlead2,Tlag2,thetaD,thetaP,Ts,FF_OUT,PV_LL1,PV_L
     Dv0=0:
     
     """
-        
     diff = DV[-1] - Dv0
     KFF = Kd/Kp
     theta_FF = max(0,thetaD-thetaP)
+#   print(DV,KFF,Tlead1,Tlag1,Ts,PV_LL1,0,'EBD')
     LL_RT(DV,KFF,Tlead1,Tlag1,Ts,PV_LL1,PVInit=0,method='EBD')
+#   print(PV_LL1)
     LL_RT(PV_LL1,1,Tlead2,Tlag2,Ts,PV_LL2,PVInit=0,method='EBD')
+#   print(PV_LL2)
     Delay_RT(PV_LL2,theta_FF,Ts,FF_OUT)
 #   print(FF_OUT)
+    
     
