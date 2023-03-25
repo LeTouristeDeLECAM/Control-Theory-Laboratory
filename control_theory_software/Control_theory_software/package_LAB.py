@@ -46,7 +46,7 @@ def LL_RT(MV,Kp,Tlead,Tlag,Ts,PV,PVInit=0,method='EBD'):
 
 #-----------------------------------
 
-def PID_RT(SP,PV,MAN,MV_MAN,MV_FF,K_C,T_I,T_D,alpha,Ts,MV_MAX,MV_MIN,MV,MV_P,MV_I,MV_D,E,MAN_FF=False,PVInit=0,method='EBD_EBD'): #,activateFF=activateFF
+def PID_RT(SP,PV,MAN,MV_MAN,MV_FF,K_C,T_I,T_D,alpha,Ts,MV_MAX,MV_MIN,MV,MV_P,MV_I,MV_D,E,MAN_FF=False,PVInit=0,method='EBD_EBD', enableFF=False ): 
     
     """
     The function "PID_RT" needs to be included in a "for or while loop".
@@ -72,6 +72,7 @@ def PID_RT(SP,PV,MAN,MV_MAN,MV_FF,K_C,T_I,T_D,alpha,Ts,MV_MAX,MV_MIN,MV,MV_P,MV_
     :PVInit: Initial value for PV (optional: default value is 0): used if PID_RT is ran f irst in t he squence and no value of PV is available yet.
     :method: discretisation method (optiona l : default value is 'EBD' )
         EBD-EBD: EBD for i ntegral action and EBD for derivative action
+    enableFF: boolean which enable or disable Fead-Forward default value False 
     
     The function "PID_RT" appends new values to the vectors "MV", "MV_P", "MV_I ", and "MV_D" .
     The appended values are based on the PID algorithm, the controller mode, and feedforward.
@@ -118,11 +119,10 @@ def PID_RT(SP,PV,MAN,MV_MAN,MV_FF,K_C,T_I,T_D,alpha,Ts,MV_MAX,MV_MIN,MV,MV_P,MV_
 
         
         #feedForward
-                        
-        if len(MV_FF)== 0 or not activateFF :
-            MV_feed_forward = 0 
-        else:
+        if enableFF == True : 
             MV_feed_forward = MV_FF[-1]
+        else:
+            MV_feed_forward = 0
                   
             
             
@@ -190,9 +190,8 @@ def IMC_Tuning(Kp,T1,T2,theta,gamma,method='SOPDT'):
         Kc = Kc/Kp
         TauI = T1+(theta/2)
         TauD = T1*theta/(2*T1+theta)
-        alpha = 0.25 # should move this somewhere else 
-        return Kc, TauI, TauD, alpha
-        
+       
+        return Kc, TauI, TauD
 
 #---------------------------------------------------------------------
 
