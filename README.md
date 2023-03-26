@@ -3,8 +3,10 @@
  By Matthias LEONARD and 
  
  ## Provide by the teacher:
-  - 
-  -
+  - package_DBR.py
+  - package_DBR.ipynb
+  - Identification_FOPDT.ipynb
+  - Identification_SOPDT.ipynb
   
  ## My personal developpement:
   - Simulation_OPL.ipynb
