@@ -1,6 +1,7 @@
 # Laboratory Control Theory
  Control theory laboratory at ECAM supervised By the teacher Franky DE BRUYNE
- By Matthias LEONARD and 
+ 
+ By Matthias LEONARD and HEnni REKIK
  
  ## Provide by the teacher:
   - package_DBR.py
