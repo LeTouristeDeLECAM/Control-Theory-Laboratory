@@ -55,20 +55,20 @@ def PID_RT(SP,PV,MAN,MV_MAN,MV_FF,K_C,T_I,T_D,alpha,Ts,MV_MAX,MV_MIN,MV,MV_P,MV_
     :PV: PV (or Process Value) vector
     :MAN : MAN (or Manual controller mode) vector (True or False)
     :MV_MAN: MV_MAN (or Manual value for MV) vector
-    :MV_FF : MV_FF ( or Feedf ort;ard) vector
+    :MV_FF : MV_FF ( or Feedfortward) vector
     :K_C: control ler gain
     :T_I : i ntegral time const ant [s]
     :T_D : derivative time constant [ s]
-    :alpha: Tfd = alpha*Td where Tfd is t he derivative f ilter time const ant [s)
-    :Ts: sampling period [s)
+    :alpha: Tfd = alpha*Td where Tfd is t he derivative f ilter time const ant [s]
+    :Ts: sampling period [s]
     :MV_MAX : maximum value for MV (used for saturation and anti wind-up)
-    :MV_MIN: minimum value for MV (used for saturation and anti t,ind-up)
+    :MV_MIN: minimum value for MV (used for saturation and anti wind-up)
     :MV: MV (or Manipulated Value) vector
     :MV_P: MV_P (or Pr opotional part of MV) vector
-    :MV_I: MV_I (or Integral part of MV} vect or
+    :MV_I: MV_I (or Integral part of MV) vector
     :MV_D: MV_D (or Derivative part of MV) vector
     :E: E (or control Error) vector
-    :Man_FF: Activated FF in manual mode (opt ional: default boolean value i s False)
+    :Man_FF: Activated FF in manual mode (optional: default boolean value is False)
     :PVInit: Initial value for PV (optional: default value is 0): used if PID_RT is ran f irst in t he squence and no value of PV is available yet.
 
     :method: discretisation method (optiona l : default value is 'EBD' )
@@ -90,11 +90,7 @@ def PID_RT(SP,PV,MAN,MV_MAN,MV_FF,K_C,T_I,T_D,alpha,Ts,MV_MAX,MV_MIN,MV,MV_P,MV_
         E.append(SP[-1] - PV[-1])
         
         
-        
-        
-    if MAN[-1] == False : 
-        
-        
+    if MAN[-1] == False :   #if we are not in manual mode  
             
         #Proportional-part
         MV_P.append(K_C*E[-1])
@@ -120,11 +116,8 @@ def PID_RT(SP,PV,MAN,MV_MAN,MV_FF,K_C,T_I,T_D,alpha,Ts,MV_MAX,MV_MIN,MV,MV_P,MV_
         
         #feedForward
         if MAN_FF == True : 
-            
-            MV_feed_forward = MV_FF[-1]
-            
+            MV_feed_forward = MV_FF[-1] 
         else:
-            
             MV_feed_forward = 0
 
                   
@@ -138,10 +131,17 @@ def PID_RT(SP,PV,MAN,MV_MAN,MV_FF,K_C,T_I,T_D,alpha,Ts,MV_MAX,MV_MIN,MV,MV_P,MV_
             MV_I[-1]=(MV_MIN-MV_P[-1]-MV_D[-1])
                         
         
+        
         # MV_part
         MV_SUM = MV_P[-1] + MV_I[-1] + MV_D[-1] + MV_feed_forward
         
-        MV.append(MV_SUM)
+        
+        #adding the value of MV in the MV vector (warning if the MV_SUM is<0) 
+        if (MV_SUM>=0):
+            MV.append(MV_SUM)
+        else :
+            MV.append(0)
+            
     
     else:
         MV_I.append(0)
@@ -150,13 +150,6 @@ def PID_RT(SP,PV,MAN,MV_MAN,MV_FF,K_C,T_I,T_D,alpha,Ts,MV_MAX,MV_MIN,MV,MV_P,MV_
         
         MV.append(MV_MAN[-1])
         
-        
-        
-        # C'est faux !!!!!!!!!!!!!!!!!!!
-        #if len(MV_MAN)==0:
-        #    MV.append(0)
-        #else :
-        #    MV.append(MV_MAN[-1])
            
             
 #----------------------------------------
@@ -204,35 +197,167 @@ def IMC_Tuning(Kp,T1,T2,theta,gamma,method='SOPDT'):
 
 
 
-def FF_RT(DV,Kd,Kp,Tlead1,Tlag1,Tlead2,Tlag2,thetaD,thetaP,Ts,FF_OUT,PV_LL1,PV_LL2,Dv0=0):
+#def FF_RT(DV,Kd,Kp,Tlead1,Tlag1,Tlead2,Tlag2,thetad,thetap,Ts,FF_OUT,PV_LL1,PV_LL2,Dv0=0):
+def FF_RT (DV , thetad, thetap, Ts, MVFFDelay, KFF, T1p, T1d, MVFFLL1, T2p, T2d, MV_FF, DV0=0):
           
     """
-    The function "FF_RT" 
+    The function "FF_RT" is feedforward realtime it's composed of one delay and two Lead-Lag
     DV:
-    Kd:
-    Kp:
-    Tlead1:
-    Tlag1:
-    Tlead2:
-    Tlag2:
-    thetaD:
-    thetaP:
-    Ts: sampling period [s]
-    FF_OUT:
-    PV_LL1:
-    PV_LL2:
-    Dv0=0:
+    thetad:
+    thetap:
+    Ts:
+    MVFFDelay:
+    KFF:rapport gain KFF = -Kd/Kp
+    T1p:
+    T1d:
+    MVFFLL1:
+    T2p:
+    T2d:
+    MV_FF: MV_FF ( or Feedfortward) vector
+    DV0=0:    
+    """
+    
+    Delay_RT(DV - DV0 * np.ones_like(DV), np.max([thetad - thetap, 0]), Ts, MVFFDelay)
+    LL_RT(MVFFDelay, KFF, T1p, T1d, Ts, MVFFLL1)
+    LL_RT(MVFFLL1,1,T2p,T2d,Ts,MV_FF)
+    
+#---------------------------------------------------------------------  
+
+class LS_Process:
+    
+    def __init__(self, parameters):
+        
+        self.parameters = parameters
+        self.parameters['Kp'] = parameters['Kp'] if 'Kp' in parameters else 1.0
+        self.parameters['theta'] = parameters['theta'] if 'theta' in parameters else 0.0
+        self.parameters['T1'] = parameters['T1'] if 'T1' in parameters else 0.0
+        self.parameters['T2'] = parameters['T2'] if 'T2' in parameters else 0.0    
+        self.parameters['Kc'] = parameters['Kc'] if 'Kc' in parameters else 0.0
+        self.parameters['Kc/Ti'] = parameters['Kc/Ti'] if 'Ti' in parameters else 0.0
+        self.parameters['KcTd/TfdS+1'] = parameters['KcTd/TfdS+1'] if 'Td' in parameters else 0.0
+        
+
+
+
+#---------------------------------------------------------------------  
+    
+
+def LSBode(P,omega, Show = True):
     
     """
-    diff = DV[-1] - Dv0
-    KFF = Kd/Kp
-    theta_FF = max(0,thetaD-thetaP)
-
-    LL_RT(DV,KFF,Tlead1,Tlag1,Ts,PV_LL1,PVInit=0,method='EBD')
-
-    LL_RT(PV_LL1,1,Tlead2,Tlag2,Ts,PV_LL2,PVInit=0,method='EBD')
-
-    Delay_RT(PV_LL2,theta_FF,Ts,FF_OUT)
-
+    
+    L(s)=(Kp*Kc)/((T1*s+1)*(T2*s+1))*(1+1/(Ti*s)+(Td*s)/(Tfd*s+1))
+    
+    :P: Process as defined by the class "Process".
+        Use the following command to define the default process which is simply a unit gain process:
+            P = Process({})
+        
+        Use the following commands for a SOPDT process:
+            P.parameters['Kp'] = Kp
+            P.parameters['T1'] = T1_p
+            P.parameters['T2'] = T2_p
+            P.parameters['theta'] = theta_p
+        
+        Use the following commands for the PID process:
+            P.parameters['Kc'] = Kc
+            P.parameters['Kc/Ti'] = Ti
+            P.parameters['KcTd/TfdS+1'] = Td      
+        
+    :omega: frequency vector (rad/s); generated by a command of the type "omega = np.logspace(-2, 2, 10000)".
+    :Show: boolean value (optional: default value = True). If Show = True, the Bode diagram is shown. Otherwise Ls (P(j omega)) (vector of complex numbers) is returned.
+    
+    The function "LSBode" generates the Bode diagram of the process P
+    """     
+    
+    s = 1j*omega
+    
+    Ptheta = np.exp(-P.parameters['theta']*s)
+    PGain = P.parameters['Kc']*P.parameters['Kp']*np.ones_like(Ptheta)
+    P1 = 1/(P.parameters['T1']*s + 1)
+    P2 = 1/(P.parameters['T2']*s + 1)
+    PID = P.parameters['KcTd/TfdS+1']*s + P.parameters['Kc'] + P.parameters['Kc/Ti']/s
     
     
+    Ls = np.multiply(Ptheta,PGain)
+    Ls = np.multiply(Ls,P1)
+    Ls = np.multiply(Ls,P2)
+    Ls = np.multiply(Ls,PID)
+    
+    
+    fig, (ax_gain, ax_phase) = plt.subplots(2,1)
+    fig.set_figheight(12)
+    fig.set_figwidth(22)
+    
+    # Gain part
+    ax_gain.semilogx(omega,20*np.log10(np.abs(Ls)),label='L(s)')
+    gain_min = np.min(20*np.log10(np.abs(Ls)/5))
+    gain_max = np.max(20*np.log10(np.abs(Ls)*5))
+    ax_gain.set_xlim([np.min(omega), np.max(omega)])
+    ax_gain.set_ylim([gain_min, gain_max])
+    ax_gain.set_ylabel('Amplitude |L(s)| [db]')
+    ax_gain.set_title('Bode plot of L(s)')
+    ax_gain.legend(loc='best')
+
+    # Phase part
+    
+    ax_phase.semilogx(omega, (180/np.pi)*np.unwrap(np.angle(Ls)),label='L(s)')   
+    ax_phase.set_xlim([np.min(omega), np.max(omega)])
+    ph_min = np.min((180/np.pi)*np.unwrap(np.angle(Ls))) - 10
+    ph_max = np.max((180/np.pi)*np.unwrap(np.angle(Ls))) + 10
+    ax_phase.set_ylim([np.max([ph_min, -200]), ph_max])
+    ax_phase.set_ylabel(r'Phase $\angle L(s)$ [°]')
+    ax_phase.legend(loc='best')
+    
+    
+
+#---------------------------------------------------------------------  
+
+def Find_value(vector, discriminat_Value):
+    """
+    vector: a vector
+    discriminat_Value : discriminat Value
+    return the indice below a discriminant value
+    """
+    
+    
+    for i in range(len(vector)):
+        if vector[i] < discriminat_Value:
+            return i
+    
+#---------------------------------------------------------------------  
+
+
+def Margins(P,omega):
+    """
+    :P: Process as defined by the class "Process".
+    :omega: frequency vector (rad/s); generated by a command of the type "omega = np.logspace(-5, 2, 70000)". 
+    
+    The function margins return the gain phase and margin of L(s).
+    
+    """
+    s = 1j*omega
+    
+    Ptheta = np.exp(-P.parameters['theta']*s)
+    PGain = P.parameters['Kc']*P.parameters['Kp']*np.ones_like(Ptheta)
+    P1 = 1/(P.parameters['T1']*s + 1)
+    P2 = 1/(P.parameters['T2']*s + 1)
+    PID = (P.parameters['KcTd/TfdS+1']*s + P.parameters['Kc'] + P.parameters['Kc/Ti']/s)
+    
+    
+    Ls = np.multiply(Ptheta,PGain)
+    Ls = np.multiply(Ls,P1)
+    Ls = np.multiply(Ls,P2)
+    Ls = np.multiply(Ls,PID)
+    
+    
+    gain = 20*np.log10(Ls).real
+    phase = (180/np.pi)*np.unwrap(np.angle(Ls))
+    
+    
+    indiceGain= Find_value(gain, 0)
+    indicePhase=Find_value(phase, -180)
+    
+    
+    print ('Gain is ', gain[indiceGain-1], 'in ', indiceGain-1, ' Phase is ', phase[indicePhase-1], 'in ',indicePhase-1 )
+    
+    return gain[indicePhase-1], phase[indiceGain-1]
