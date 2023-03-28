@@ -170,7 +170,7 @@ def IMC_Tuning(Kp,T1,T2,theta,gamma,method='SOPDT'):
     
     if method=='SOPDT':
         
-        # silde 186 Ligne B 
+        # silde 186 Ligne B !!!!!! --> I
         TauOLP = max(T1,T2)
         TauC = gamma*TauOLP
         Kc = (T1+T2)/(TauC)
