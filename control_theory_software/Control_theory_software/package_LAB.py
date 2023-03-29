@@ -321,11 +321,11 @@ def Margins(P,C,omega, Show = True):
     print ('indiceGain: ', indiceGain)
     print ('indicePhase: ', indicePhase)
 
-    frequencyGain = omega[indicePhase-1]
-    frequencyPhase = omega[indiceGain-1]
+    #frequencyGain = omega[indicePhase-1]
+    #frequencyPhase = omega[indiceGain-1]
 
-    gainMargin = 20*np.log10(np.abs(Ls[indiceGain]))
-    phaseMargin = 180 + (180/np.pi)*np.angle(Ls[indicePhase])
+    #gainMargin = 20*np.log10(np.abs(Ls[indiceGain]))
+    #phaseMargin = 180 + (180/np.pi)*np.angle(Ls[indicePhase])
         
 
     
@@ -355,13 +355,37 @@ def Margins(P,C,omega, Show = True):
 
 
     # Draw the gain and phase crossover frequencies
-     
-    ax_gain.axvline(x=frequencyGain, color='y', linestyle='-')
     ax_gain.axhline(y=0, color='g', linestyle='--')
-    ax_gain.axvline(x=frequencyPhase, color='b', linestyle='-')
-    ax_phase.axvline(x=frequencyGain, color='y', linestyle='-')
-    ax_phase.axvline(x=frequencyPhase, color='b', linestyle='-')
     ax_phase.axhline(y=-180, color='r', linestyle='--')
+
+    try: 
+        frequencyGain = omega[indicePhase-1]
+        
+        ax_gain.axvline(x=frequencyGain, color='y', linestyle='-')
+        ax_phase.axvline(x=frequencyGain, color='y', linestyle='-')
+        
+        
+    except:
+        print ('Error in the frequency gain computation')
+        
+    try :
+        frequencyPhase = omega[indiceGain-1]
+        
+        ax_gain.axvline(x=frequencyPhase, color='b', linestyle='-')
+        ax_phase.axvline(x=frequencyPhase, color='b', linestyle='-')
+        
+    except:
+        print('Error in the frequency pahse computation ')
+
+
+    
+
+    #gainMargin = 20*np.log10(np.abs(Ls[indiceGain]))
+    #phaseMargin = 180 + (180/np.pi)*np.angle(Ls[indicePhase])
+     
+    
+
+    
     
 
     print ('Gain margin : ', gain[indicePhase-1] ,'dB at ', frequencyGain, 'rad/s Phase margin :',(180-phase[indiceGain-1]),'° at ',frequencyPhase,'rad/s' )
