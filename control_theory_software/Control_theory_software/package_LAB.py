@@ -340,7 +340,7 @@ def Margins(P,C,omega, Show = True):
     ax_gain.set_xlim([np.min(omega), np.max(omega)])
     ax_gain.set_ylim([gain_min, gain_max])
     ax_gain.set_ylabel('Amplitude |L(s)| [db]')
-    ax_gain.set_title('Bode plot of L(s)')
+    ax_gain.set_title('Bode plot of L(s) alpha: '+str(C.parameters['alpha']))
     ax_gain.legend(loc='best')
 
     # Phase part
