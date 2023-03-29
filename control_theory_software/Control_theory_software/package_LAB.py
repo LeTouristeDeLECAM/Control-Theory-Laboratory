@@ -358,37 +358,28 @@ def Margins(P,C,omega, Show = True):
     ax_gain.axhline(y=0, color='g', linestyle='--')
     ax_phase.axhline(y=-180, color='r', linestyle='--')
 
+    
     try: 
         frequencyGain = omega[indicePhase-1]
-        
         ax_gain.axvline(x=frequencyGain, color='y', linestyle='-')
         ax_phase.axvline(x=frequencyGain, color='y', linestyle='-')
+        print ('Gain margin : ', gain[indicePhase-1] ,'dB at ', frequencyGain, 'rad/s ')
         
         
     except:
         print ('Error in the frequency gain computation')
         
     try :
-        frequencyPhase = omega[indiceGain-1]
-        
+        frequencyPhase = omega[indiceGain-1]        
         ax_gain.axvline(x=frequencyPhase, color='b', linestyle='-')
         ax_phase.axvline(x=frequencyPhase, color='b', linestyle='-')
+        print ('Phase margin :',(180-phase[indiceGain-1]),'° at ',frequencyPhase,'rad/s' )
         
     except:
         print('Error in the frequency pahse computation ')
 
-
-    
-
-    #gainMargin = 20*np.log10(np.abs(Ls[indiceGain]))
-    #phaseMargin = 180 + (180/np.pi)*np.angle(Ls[indicePhase])
      
     
-
-    
-    
-
-    print ('Gain margin : ', gain[indicePhase-1] ,'dB at ', frequencyGain, 'rad/s Phase margin :',(180-phase[indiceGain-1]),'° at ',frequencyPhase,'rad/s' )
     
 
 #---------------------------------------------------------------------  
