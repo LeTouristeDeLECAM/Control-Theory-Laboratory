@@ -90,48 +90,49 @@ def PID_RT(SP,PV,MAN,MV_MAN,MV_FF,K_C,T_I,T_D,alpha,Ts,MV_MAX,MV_MIN,MV,MV_P,MV_
         E.append(SP[-1] - PV[-1])
         
         
-    if MAN[-1] == False :   #if we are not in manual mode  
+    
             
-        #Proportional-part
-        MV_P.append(K_C*E[-1])
+    #Proportional-part
+    MV_P.append(K_C*E[-1])
         
         
-        #Itegral-part
-        if len(MV_I)==0 : 
-            MV_I.append(( K_C * Ts/ T_I)* E[-1])
-        else : 
-            MV_I.append(MV_I[-1]+(K_C * Ts/ T_I)*E[-1])
+    #Itegral-part #slide 201
+    if len(MV_I)<=2 : # peut etre changer la condition en len(E)<=2
+        MV_I.append(( K_C * Ts/ T_I)* E[-1]) # attention veriefier je ne sais pas si c'est bien
+    else : 
+        MV_I.append(MV_I[-2]+(K_C * Ts/ T_I)*E[-1])
         
         
-        #Derivative_part (Have to be filtred slide 194)
-        T_FD = alpha*T_D 
+    #Derivative_part (Have to be filtred slide 194)
+    T_FD = alpha*T_D 
         
-        if len(MV_D)==0 and len(E)>1:
-            MV_D.append((K_C * T_D/T_FD + Ts)*(E[-1] - E[-2]))
-        elif len(E)==1:
-            MV_D.append(0)
-        else:
-            MV_D.append((T_FD / (T_FD + Ts))*MV_D[-1]+(K_C * T_D/(T_FD + Ts))*(E[-1] - E[-2]))
+    if len(MV_D)==0 and len(E)>1:
+        MV_D.append((K_C * T_D/T_FD + Ts)*(E[-1] - E[-2]))
+    elif len(E)==1:
+        MV_D.append(0)
+    else:
+        MV_D.append((T_FD / (T_FD + Ts))*MV_D[-1]+(K_C * T_D/(T_FD + Ts))*(E[-1] - E[-2]))
             
         
-        #feedForward
-        if MAN_FF == True : 
-            MV_feed_forward = MV_FF[-1] 
-        else:
-            MV_feed_forward = 0
+    #feedForward
+    if MAN_FF == True : 
+        MV_feed_forward = MV_FF[-1] 
+    else:
+        MV_feed_forward = 0
 
                   
             
             
-        #windup 
-        if MV_P[-1]+MV_I[-1]+MV_D[-1]>MV_MAX:
-            MV_I[-1]=(MV_MAX-MV_P[-1]-MV_D[-1])
+    #windup slide 202
+    if MV_P[-1]+MV_I[-1]+MV_D[-1]+MV_feed_forward>MV_MAX:
+        MV_I[-1]=(MV_MAX-MV_P[-1]-MV_D[-1]-MV_feed_forward)
             
-        elif MV_P[-1]+MV_I[-1]+MV_D[-1]<MV_MIN :
-            MV_I[-1]=(MV_MIN-MV_P[-1]-MV_D[-1])
+    elif MV_P[-1]+MV_I[-1]+MV_D[-1]+MV_feed_forward<MV_MIN :
+        MV_I[-1]=(MV_MIN-MV_P[-1]-MV_D[-1]-MV_feed_forward)
                         
         
-        
+    if MAN[-1] == False :   #if we are not in manual mode  
+
         # MV_part
         MV_SUM = MV_P[-1] + MV_I[-1] + MV_D[-1] + MV_feed_forward
         
@@ -148,12 +149,30 @@ def PID_RT(SP,PV,MAN,MV_MAN,MV_FF,K_C,T_I,T_D,alpha,Ts,MV_MAX,MV_MIN,MV,MV_P,MV_
 
             
     
-    else:
-        MV_I.append(0)
-        MV_P.append(0)
-        MV_D.append(0)
+    else: #if we are in manual mode
+
+        MV_I[-1]=MV_MAN[-1]- MV_P[-1] #slide 201 3eme ligne 
+
+        #FeedForward in manual mode
+        if MAN_FF == True : 
+            MV_feed_forward = MV_FF[-1] 
+        else:
+            MV_feed_forward = 0
         
-        MV.append(MV_MAN[-1])
+         # MV_part
+        MV_SUM = MV_P[-1]+MV_I[-1] + MV_feed_forward #slide 201 4eme ligne
+        
+        #adding the value of MV in the MV vector (warning if the MV_SUM is< MV_MIN or >MV_MAX) 
+        if (MV_SUM>=MV_MIN and MV_SUM<=MV_MAX):
+            MV.append(MV_SUM)
+
+        elif (MV_SUM<MV_MIN):
+            MV.append(MV_MIN)
+
+        elif (MV_SUM>MV_MAX) :
+            MV.append(MV_MAX)
+        
+        
         
            
             
@@ -297,15 +316,15 @@ def Margins(P,C,omega, Show = True):
     s = 1j*omega
     
     Ptheta = np.exp(-P.parameters['theta']*s)
-    PGain = C.parameters['Kc']*P.parameters['Kp']*np.ones_like(Ptheta)
-    P1 = 1/(P.parameters['Tlag1']*s + 1)
-    P2 = 1/(P.parameters['Tlag2']*s + 1)
-    PID = C.parameters['Td']*s/(C.parameters['Td']*C.parameters['alpha']*s + 1) + C.parameters['Kc'] + C.parameters['Ti']/s
+    PGain = (C.parameters['Kc']*P.parameters['Kp'])
+    P1 = (1/((P.parameters['Tlag1']*s + 1)*(P.parameters['Tlag2']*s + 1)))
+    #P2 = (1/(P.parameters['Tlag2']*s + 1))
+    PID = (1+(C.parameters['Td']*s/(C.parameters['Td']*C.parameters['alpha']*s + 1)) + (1/(C.parameters['Ti']*s)))
     
     
     Ls = np.multiply(Ptheta,PGain)
     Ls = np.multiply(Ls,P1)
-    Ls = np.multiply(Ls,P2)
+    #Ls = np.multiply(Ls,P2)
     Ls = np.multiply(Ls,PID)
 
 
