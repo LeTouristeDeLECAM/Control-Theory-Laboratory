@@ -395,7 +395,7 @@ def Margins(P,C,omega, Show = True):
         print ('Phase margin :',(180-phase[indiceGain-1]),'° at ',frequencyPhase,'rad/s' )
         
     except:
-        print('Error in the frequency pahse computation ')
+        print('Error in the frequency phase computation ')
 
      
     
